@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HALFTONE STUDIO</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap");
+
+      @font-face {
+        font-family: "PartialSans";
+        src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-1@1.1/PartialSansKR-Regular.woff2")
+          format("woff2");
+        font-weight: normal;
+        font-display: swap;
+      }
+
+      :root {
+        --bg: #ffffff;
+        --panel: #f5f5f5;
+        --border: #d0d0d0;
+        --accent: #111111;
+        --accent2: #555555;
+        --text: #111111;
+        --muted: #888888;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Space Mono", monospace;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        font-family: "PartialSans", sans-serif;
+      }
+
+      header {
+        padding: 16px 28px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: var(--panel);
+      }
+
+      header h1 {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 2rem;
+        letter-spacing: 4px;
+        color: var(--text);
+        text-shadow: none;
+        font-family: "PartialSans", sans-serif;
+      }
+
+      header .tag {
+        font-size: 0.6rem;
+        border: 1px solid var(--muted);
+        color: var(--muted);
+        padding: 2px 8px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .layout {
+        display: flex;
+        flex: 1;
+        height: calc(100vh - 60px);
+      }
+
+      .sidebar {
+        width: 260px;
+        min-width: 260px;
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        padding: 16px;
+        gap: 20px;
+      }
+
+      .section-title {
+        font-size: 0.6rem;
+        letter-spacing: 3px;
+        color: #111;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .source-btns {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .btn {
+        padding: 10px 14px;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: "Space Mono", monospace; /*원래 폰트*/
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: "PartialSans", sans-serif;
+      }
+      .btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .btn.danger {
+        border-color: var(--accent2);
+        color: var(--accent2);
+      }
+      .btn.danger:hover {
+        background: var(--accent2);
+        color: #fff;
+      }
+
+      .shapes-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+
+      .shape-btn {
+        aspect-ratio: 1;
+        background: transparent;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        padding: 4px;
+      }
+      .shape-btn:hover {
+        border-color: var(--accent);
+      }
+      .shape-btn.active {
+        background: #111;
+        border-color: #111;
+      }
+      .shape-btn.active svg {
+        fill: #fff;
+      }
+      .shape-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: var(--muted);
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .control-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .control-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.65rem;
+        color: var(--muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .control-label span:last-child {
+        color: #111;
+        font-weight: 700;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 2px;
+        background: var(--border);
+        outline: none;
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        background: #111;
+        cursor: pointer;
+      }
+
+      .color-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .color-swatch {
+        position: relative;
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .color-swatch input[type="color"] {
+        position: absolute;
+        inset: -4px;
+        width: calc(100% + 8px);
+        height: calc(100% + 8px);
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        opacity: 0;
+      }
+      .color-swatch-preview {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .color-label {
+        font-size: 0.65rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .render-btn {
+        width: 100%;
+        padding: 14px;
+        background: #111;
+        border: none;
+        color: #fff;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.2rem;
+        letter-spacing: 4px;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: "PartialSans", sans-serif;
+      }
+      .render-btn:hover {
+        background: #444;
+      }
+
+      .download-btn {
+        width: 100%;
+        padding: 10px;
+        background: transparent;
+        border: 1px solid var(--muted);
+        color: var(--muted);
+        font-family: "Space Mono", monospace;
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: "PartialSans", sans-serif;
+      }
+      .download-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+        position: relative;
+        overflow: hidden;
+        padding: 24px;
+      }
+
+      #outputCanvas {
+        max-width: 100%;
+        max-height: calc(100vh - 120px);
+        display: block;
+        border: 1px solid var(--border);
+      }
+
+      /* hidden offscreen canvases */
+      #sampleCanvas,
+      #sourceVideo {
+        display: none;
+      }
+
+      .drop-zone {
+        width: 640px;
+        max-width: 100%;
+        height: 400px;
+        border: 2px dashed var(--border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+      }
+      .drop-zone:hover,
+      .drop-zone.drag-over {
+        border-color: var(--accent);
+        background: rgba(232, 255, 0, 0.03);
+      }
+      .drop-zone input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .drop-icon {
+        font-size: 3rem;
+        color: var(--muted);
+      }
+      .drop-text {
+        font-size: 0.75rem;
+        color: var(--muted);
+        letter-spacing: 2px;
+        text-align: center;
+      }
+
+      .status-bar {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.6rem;
+        color: var(--muted);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.6rem;
+        color: #e00;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        background: #e00;
+        border-radius: 50%;
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.2;
+        }
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+      }
+
+      select {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: "Space Mono", monospace;
+        font-size: 0.65rem;
+        padding: 8px;
+        width: 100%;
+        letter-spacing: 1px;
+        cursor: pointer;
+        outline: none;
+        font-family: "PartialSans", sans-serif;
+      }
+      select:focus {
+        border-color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>HALFTONE STUDIO</h1>
+      <span class="tag">v4.0 LIVE</span>
+      <span id="liveBadge" class="live-badge hidden"
+        ><span class="live-dot"></span>LIVE</span
+      >
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div>
+          <div class="section-title">📸 소스</div>
+          <div class="source-btns">
+            <button class="btn" id="btnWebcam" onclick="startWebcam()">
+              ⬤ 웹캠 시작
+            </button>
+            <button
+              class="btn"
+              id="btnUpload"
+              onclick="document.getElementById('fileInput').click()"
+            >
+              ↑ 이미지 업로드
+            </button>
+            <button
+              class="btn danger hidden"
+              id="btnStop"
+              onclick="stopWebcam()"
+            >
+              ■ 웹캠 정지
+            </button>
+            <input
+              type="file"
+              id="fileInput"
+              accept="image/*,video/*"
+              style="display: none"
+              onchange="handleFileUpload(event)"
+            />
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">◉ 도트 모양</div>
+          <div class="shapes-grid">
+            <button
+              class="shape-btn active"
+              data-shape="circle"
+              onclick="selectShape(this)"
+              title="원"
+            >
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /></svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="square"
+              onclick="selectShape(this)"
+              title="사각형"
+            >
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="diamond"
+              onclick="selectShape(this)"
+              title="다이아몬드"
+            >
+              <svg viewBox="0 0 24 24">
+                <polygon points="12,2 22,12 12,22 2,12" />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="star"
+              onclick="selectShape(this)"
+              title="별"
+            >
+              <svg viewBox="0 0 24 24">
+                <polygon
+                  points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"
+                />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="heart"
+              onclick="selectShape(this)"
+              title="하트"
+            >
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"
+                />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="triangle"
+              onclick="selectShape(this)"
+              title="삼각형"
+            >
+              <svg viewBox="0 0 24 24">
+                <polygon points="12,2 22,22 2,22" />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="cross"
+              onclick="selectShape(this)"
+              title="십자"
+            >
+              <svg viewBox="0 0 24 24">
+                <path d="M10 2h4v8h8v4h-8v8h-4v-8H2v-4h8z" />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="hexagon"
+              onclick="selectShape(this)"
+              title="육각형"
+            >
+              <svg viewBox="0 0 24 24">
+                <polygon points="12,2 20.66,7 20.66,17 12,22 3.34,17 3.34,7" />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="ring"
+              onclick="selectShape(this)"
+              title="링"
+            >
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 16a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"
+                />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="line"
+              onclick="selectShape(this)"
+              title="선"
+            >
+              <svg viewBox="0 0 24 24">
+                <rect x="2" y="10" width="20" height="4" />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="arrow"
+              onclick="selectShape(this)"
+              title="화살표"
+            >
+              <svg viewBox="0 0 24 24">
+                <polygon points="3,12 14,3 14,8 21,8 21,16 14,16 14,21" />
+              </svg>
+            </button>
+            <button
+              class="shape-btn"
+              data-shape="moon"
+              onclick="selectShape(this)"
+              title="달"
+            >
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">⚙ 설정</div>
+          <div class="control-group">
+            <div class="control-row">
+              <div class="control-label">
+                <span>도트 크기</span><span id="valSize">14</span>
+              </div>
+              <input
+                type="range"
+                id="dotSize"
+                min="4"
+                max="40"
+                value="14"
+                oninput="
+                  updateVal('valSize', this.value);
+                  liveRender();
+                "
+              />
+            </div>
+            <div class="control-row">
+              <div class="control-label">
+                <span>간격</span><span id="valGap">2</span>
+              </div>
+              <input
+                type="range"
+                id="dotGap"
+                min="0"
+                max="20"
+                value="2"
+                oninput="
+                  updateVal('valGap', this.value);
+                  liveRender();
+                "
+              />
+            </div>
+            <div class="control-row">
+              <div class="control-label">
+                <span>부드러운 정도</span><span id="valBlur">1</span>
+              </div>
+              <input
+                type="range"
+                id="blurAmount"
+                min="0"
+                max="10"
+                value="1"
+                oninput="
+                  updateVal('valBlur', this.value);
+                  liveRender();
+                "
+              />
+            </div>
+            <div class="control-row">
+              <div class="control-label">
+                <span>밝기</span><span id="valBrightness">100</span>
+              </div>
+              <input
+                type="range"
+                id="brightness"
+                min="50"
+                max="200"
+                value="100"
+                oninput="
+                  updateVal('valBrightness', this.value);
+                  liveRender();
+                "
+              />
+            </div>
+            <div class="control-row">
+              <div class="control-label">
+                <span>대비</span><span id="valContrast">130</span>
+              </div>
+              <input
+                type="range"
+                id="contrast"
+                min="50"
+                max="300"
+                value="130"
+                oninput="
+                  updateVal('valContrast', this.value);
+                  liveRender();
+                "
+              />
+            </div>
+            <div class="control-row">
+              <div class="control-label">
+                <span>각도</span><span id="valAngle">0</span>°
+              </div>
+              <input
+                type="range"
+                id="angle"
+                min="0"
+                max="90"
+                value="0"
+                oninput="
+                  updateVal('valAngle', this.value);
+                  liveRender();
+                "
+              />
+            </div>
+            <div class="control-row">
+              <div class="control-label">
+                <span>반전</span><span id="valInvert">OFF</span>
+              </div>
+              <input
+                type="range"
+                id="invertAmount"
+                min="0"
+                max="1"
+                step="1"
+                value="0"
+                oninput="
+                  updateVal('valInvert', this.value == 1 ? 'ON' : 'OFF');
+                  liveRender();
+                "
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">🎨 색상</div>
+          <div class="control-row" style="margin-bottom: 8px">
+            <select id="colorMode">
+              <option value="mono">흑백 모노톤</option>
+              <option value="color">원본 컬러</option>
+              <option value="duotone">듀오톤</option>
+              <option value="custom">커스텀 단색</option>
+            </select>
+          </div>
+          <div
+            id="colorPickers"
+            style="
+              display: none;
+              flex-direction: column;
+              gap: 8px;
+              margin-top: 8px;
+            "
+          >
+            <div class="color-row">
+              <div class="color-swatch">
+                <div
+                  class="color-swatch-preview"
+                  id="dotColorPreview"
+                  style="background: #111111"
+                ></div>
+                <input
+                  type="color"
+                  id="dotColor"
+                  value="#111111"
+                  oninput="
+                    document.getElementById(
+                      'dotColorPreview',
+                    ).style.background = this.value;
+                    liveRender();
+                  "
+                />
+              </div>
+              <span class="color-label">도트 색</span>
+            </div>
+            <div class="color-row">
+              <div class="color-swatch">
+                <div
+                  class="color-swatch-preview"
+                  id="bgColorPreview"
+                  style="background: #ffffff"
+                ></div>
+                <input
+                  type="color"
+                  id="bgColor"
+                  value="#ffffff"
+                  oninput="
+                    document.getElementById('bgColorPreview').style.background =
+                      this.value;
+                    liveRender();
+                  "
+                />
+              </div>
+              <span class="color-label">배경 색</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: auto;
+          "
+        >
+          <button class="download-btn" onclick="downloadCanvas()">
+            ↓ PNG 다운로드
+          </button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div id="dropZone" class="drop-zone">
+          <input
+            type="file"
+            accept="image/*,video/*"
+            onchange="handleFileUpload(event)"
+          />
+          <div class="drop-icon">⬡</div>
+          <div class="drop-text">
+            이미지 또는 영상을 드래그하거나<br />좌측 소스 버튼을 이용하세요
+          </div>
+        </div>
+        <canvas id="outputCanvas" class="hidden"></canvas>
+
+        <!-- 픽셀 샘플링 전용 숨김 캔버스 -->
+        <canvas id="sampleCanvas"></canvas>
+        <video id="sourceVideo" autoplay muted playsinline></video>
+
+        <div class="status-bar" id="statusBar">
+          대기 중 — 소스를 선택해주세요
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // ─── State ───────────────────────────────────────────────────
+      let currentShape = "circle";
+      let webcamStream = null;
+      let rafId = null;
+      let sourceImage = null; // HTMLImageElement
+      let isLive = false;
+
+      const video = document.getElementById("sourceVideo");
+      const outCanvas = document.getElementById("outputCanvas");
+      const sampleCvs = document.getElementById("sampleCanvas");
+      const outCtx = outCanvas.getContext("2d");
+      const sampleCtx = sampleCvs.getContext("2d", {
+        willReadFrequently: true,
+      });
+
+      // ─── UI helpers ──────────────────────────────────────────────
+      function updateVal(id, v) {
+        document.getElementById(id).textContent = v;
+      }
+      function setStatus(msg) {
+        document.getElementById("statusBar").textContent = msg;
+      }
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function selectShape(btn) {
+        document
+          .querySelectorAll(".shape-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentShape = btn.dataset.shape;
+        liveRender();
+      }
+
+      $("colorMode").addEventListener("change", function () {
+        const show = this.value === "custom" || this.value === "duotone";
+        $("colorPickers").style.display = show ? "flex" : "none";
+        liveRender();
+      });
+
+      // 실시간 렌더: 이미지는 debounce(60ms), 웹캠/영상은 루프가 알아서 처리
+      let _liveTimer = null;
+      function liveRender() {
+        if (isLive || (!sourceImage && video.readyState >= 2)) return; // 루프가 처리
+        clearTimeout(_liveTimer);
+        _liveTimer = setTimeout(renderHalftone, 60);
+      }
+
+      // drag-and-drop
+      const dropZone = $("dropZone");
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+      dropZone.addEventListener("dragleave", () =>
+        dropZone.classList.remove("drag-over"),
+      );
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+      });
+
+      // ─── Source management ───────────────────────────────────────
+      function handleFileUpload(e) {
+        if (e.target.files[0]) processFile(e.target.files[0]);
+      }
+
+      function processFile(file) {
+        stopAll();
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+              sourceImage = img;
+              showCanvas();
+              renderHalftone();
+              setStatus(
+                "이미지 — " + img.naturalWidth + "×" + img.naturalHeight,
+              );
+            };
+            img.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        } else if (file.type.startsWith("video/")) {
+          video.src = URL.createObjectURL(file);
+          video.onloadeddata = () => {
+            isLive = false;
+            showCanvas();
+            startLoop(24);
+            setStatus("영상 — " + video.videoWidth + "×" + video.videoHeight);
+          };
+          video.play();
+        }
+      }
+
+      async function startWebcam() {
+        try {
+          stopAll();
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480, facingMode: "user" },
+          });
+          webcamStream = stream;
+          video.srcObject = stream;
+          await video.play();
+          // 첫 프레임이 올 때까지 잠깐 기다림
+          await new Promise((res) => {
+            video.onloadeddata = res;
+            setTimeout(res, 800);
+          });
+          isLive = true;
+          showCanvas();
+          $("liveBadge").classList.remove("hidden");
+          $("btnStop").classList.remove("hidden");
+          startLoop(15);
+          setStatus("웹캠 실시간");
+        } catch (err) {
+          alert("웹캠 오류: " + err.message);
+        }
+      }
+
+      function stopWebcam() {
+        stopAll();
+        $("liveBadge").classList.add("hidden");
+        $("btnStop").classList.add("hidden");
+        setStatus("웹캠 정지됨");
+      }
+
+      function stopAll() {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        if (webcamStream) {
+          webcamStream.getTracks().forEach((t) => t.stop());
+          webcamStream = null;
+        }
+        video.srcObject = null;
+        video.src = "";
+        isLive = false;
+        sourceImage = null;
+      }
+
+      function showCanvas() {
+        $("dropZone").classList.add("hidden");
+        outCanvas.classList.remove("hidden");
+      }
+
+      function startLoop(fps) {
+        let last = 0;
+        function tick(ts) {
+          if (ts - last > 1000 / fps) {
+            renderHalftone();
+            last = ts;
+          }
+          rafId = requestAnimationFrame(tick);
+        }
+        rafId = requestAnimationFrame(tick);
+      }
+
+      // ─── Halftone renderer ───────────────────────────────────────
+      function renderHalftone() {
+        // 1) 소스 크기 결정
+        let srcW, srcH, srcEl;
+        if (sourceImage) {
+          srcEl = sourceImage;
+          srcW = sourceImage.naturalWidth;
+          srcH = sourceImage.naturalHeight;
+        } else {
+          srcEl = video;
+          srcW = video.videoWidth;
+          srcH = video.videoHeight;
+          if (!srcW || !srcH || video.readyState < 2) return;
+        }
+
+        // 2) 파라미터
+        const dotSize = +$("dotSize").value;
+        const gap = +$("dotGap").value;
+        const blur = +$("blurAmount").value;
+        const bri = +$("brightness").value / 100;
+        const con = +$("contrast").value / 100;
+        const angleDeg = +$("angle").value;
+        const invert = +$("invertAmount").value === 1;
+        const colorMode = $("colorMode").value;
+        const dotColor = $("dotColor").value;
+        const bgColor = $("bgColor").value;
+
+        const step = dotSize + gap;
+
+        // 3) sampleCanvas에 소스를 그려 픽셀 데이터 추출
+        //    → 여기서 filter를 적용하면 getImageData가 올바른 값을 돌려줌
+        sampleCvs.width = srcW;
+        sampleCvs.height = srcH;
+        sampleCtx.save();
+        if (blur > 0) {
+          sampleCtx.filter = `blur(${blur}px) brightness(${bri}) contrast(${con})`;
+        } else {
+          sampleCtx.filter = `brightness(${bri}) contrast(${con})`;
+        }
+        // 좌우반전 기능
+        if (isLive) {
+          sampleCtx.translate(srcW, 0);
+          sampleCtx.scale(-1, 1);
+        }
+        sampleCtx.drawImage(srcEl, 0, 0, srcW, srcH);
+        sampleCtx.restore();
+        const pixels = sampleCtx.getImageData(0, 0, srcW, srcH).data;
+
+        // 4) 출력 캔버스 초기화
+        outCanvas.width = srcW;
+        outCanvas.height = srcH;
+
+        let bgFill;
+        if (colorMode === "custom" || colorMode === "duotone") bgFill = bgColor;
+        else bgFill = invert ? "#000" : "#fff";
+        outCtx.fillStyle = bgFill;
+        outCtx.fillRect(0, 0, srcW, srcH);
+
+        // 5) 회전 그리드
+        const cx = srcW / 2,
+          cy = srcH / 2;
+        const rad = (angleDeg * Math.PI) / 180;
+        const diag = Math.hypot(srcW, srcH);
+        const half = Math.ceil(diag / step) + 2;
+
+        for (let row = -half; row <= half; row++) {
+          for (let col = -half; col <= half; col++) {
+            const gx = col * step;
+            const gy = row * step;
+            // 회전 후 캔버스 좌표
+            const rx = gx * Math.cos(rad) - gy * Math.sin(rad) + cx;
+            const ry = gx * Math.sin(rad) + gy * Math.cos(rad) + cy;
+
+            // 캔버스 밖이면 스킵
+            if (
+              rx < -step ||
+              rx > srcW + step ||
+              ry < -step ||
+              ry > srcH + step
+            )
+              continue;
+
+            // 해당 위치의 픽셀 샘플 (클램프)
+            const px = Math.min(srcW - 1, Math.max(0, Math.round(rx)));
+            const py = Math.min(srcH - 1, Math.max(0, Math.round(ry)));
+            const i = (py * srcW + px) * 4;
+            const r = pixels[i],
+              g = pixels[i + 1],
+              b = pixels[i + 2];
+
+            // 밝기 → 도트 크기 비율 (0~1)
+            const lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+            const t = invert ? lum : 1 - lum; // 어두울수록 도트 크게
+
+            const radius = (dotSize / 2) * t;
+            if (radius < 0.3) continue; // 너무 작으면 그리지 않음
+
+            // 색 결정
+            let fill;
+            if (colorMode === "color") {
+              fill = `rgb(${r},${g},${b})`;
+            } else if (colorMode === "duotone") {
+              const dc = hexRgb(dotColor),
+                bc = hexRgb(bgColor);
+              fill = `rgb(${~~(bc.r + (dc.r - bc.r) * t)},${~~(bc.g + (dc.g - bc.g) * t)},${~~(bc.b + (dc.b - bc.b) * t)})`;
+            } else if (colorMode === "custom") {
+              fill = dotColor;
+            } else {
+              fill = invert ? "#fff" : "#000";
+            }
+
+            outCtx.save();
+            outCtx.translate(rx, ry);
+            outCtx.fillStyle = fill;
+            drawDot(outCtx, currentShape, radius);
+            outCtx.restore();
+          }
+        }
+
+        setStatus(
+          `${currentShape} · ${srcW}×${srcH} · step:${step} blur:${blur}`,
+        );
+      }
+
+      // ─── Shape drawing ───────────────────────────────────────────
+      function drawDot(c, shape, r) {
+        c.beginPath();
+        switch (shape) {
+          case "circle":
+            c.arc(0, 0, r, 0, Math.PI * 2);
+            break;
+          case "square":
+            c.rect(-r, -r, r * 2, r * 2);
+            break;
+          case "diamond":
+            c.moveTo(0, -r);
+            c.lineTo(r, 0);
+            c.lineTo(0, r);
+            c.lineTo(-r, 0);
+            c.closePath();
+            break;
+          case "star": {
+            const inner = r * 0.4;
+            for (let i = 0; i < 10; i++) {
+              const a = (i * Math.PI) / 5 - Math.PI / 2;
+              const rr = i % 2 === 0 ? r : inner;
+              i === 0
+                ? c.moveTo(Math.cos(a) * rr, Math.sin(a) * rr)
+                : c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+            }
+            c.closePath();
+            break;
+          }
+          case "heart": {
+            // 하트: 위로 뾰족하게
+            const s = r * 0.75;
+            c.moveTo(0, s);
+            c.bezierCurveTo(s * 1.4, s * 0.3, s * 1.8, -s * 0.8, 0, -s * 1.2);
+            c.bezierCurveTo(-s * 1.8, -s * 0.8, -s * 1.4, s * 0.3, 0, s);
+            c.closePath();
+            break;
+          }
+          case "triangle":
+            c.moveTo(0, -r);
+            c.lineTo(r * 0.866, r * 0.5);
+            c.lineTo(-r * 0.866, r * 0.5);
+            c.closePath();
+            break;
+          case "cross":
+            c.rect(-r, -r * 0.35, r * 2, r * 0.7);
+            c.moveTo(0, 0);
+            c.rect(-r * 0.35, -r, r * 0.7, r * 2);
+            break;
+          case "hexagon":
+            for (let i = 0; i < 6; i++) {
+              const a = (Math.PI / 3) * i - Math.PI / 6;
+              i === 0
+                ? c.moveTo(Math.cos(a) * r, Math.sin(a) * r)
+                : c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+            }
+            c.closePath();
+            break;
+          case "ring":
+            c.arc(0, 0, r, 0, Math.PI * 2);
+            c.moveTo(r * 0.55, 0);
+            c.arc(0, 0, r * 0.55, 0, Math.PI * 2, true);
+            break;
+          case "line":
+            c.rect(-r, -r * 0.22, r * 2, r * 0.44);
+            break;
+          case "arrow":
+            c.moveTo(-r, -r * 0.3);
+            c.lineTo(r * 0.1, -r * 0.3);
+            c.lineTo(r * 0.1, -r);
+            c.lineTo(r, 0);
+            c.lineTo(r * 0.1, r);
+            c.lineTo(r * 0.1, r * 0.3);
+            c.lineTo(-r, r * 0.3);
+            c.closePath();
+            break;
+          case "moon":
+            c.arc(0, 0, r, 0.4, Math.PI * 1.6);
+            c.arc(r * 0.35, 0, r * 0.72, Math.PI * 1.6, 0.4, true);
+            c.closePath();
+            break;
+          default:
+            c.arc(0, 0, r, 0, Math.PI * 2);
+        }
+        c.fill();
+      }
+
+      // ─── Utilities ───────────────────────────────────────────────
+      function hexRgb(hex) {
+        return {
+          r: parseInt(hex.slice(1, 3), 16),
+          g: parseInt(hex.slice(3, 5), 16),
+          b: parseInt(hex.slice(5, 7), 16),
+        };
+      }
+
+      function downloadCanvas() {
+        if (outCanvas.classList.contains("hidden")) {
+          alert("먼저 렌더링하세요!");
+          return;
+        }
+        const a = document.createElement("a");
+        a.download = "halftone_" + currentShape + "_" + Date.now() + ".png";
+        a.href = outCanvas.toDataURL("image/png");
+        a.click();
+      }
+    </script>
+  </body>
+</html>
